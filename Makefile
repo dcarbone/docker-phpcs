@@ -15,18 +15,24 @@ TAG = latest
 PHP   = latest
 PHPCS = latest
 
+BUILDX_PLATFORMS = "linux/arm/v6,linux/arm/v7,linux/arm64,linux/amd64"
+
+BUILD_ARGS_BASE = --build-arg PHPCS=$(PHPCS) -t $(IMAGE) -f $(DIR)/$(FILE) $(DIR)
+BUILD_ARGS_LATEST = --build-arg PHP=8-cli-alpine $(BUILD_ARGS_BASE)
+BUILD_ARGS_VERSION = --build-arg PHP=$(PHP)-cli-alpine $(BUILD_ARGS_BASE)
+
 build:
 ifeq ($(PHP),latest)
-	docker build --build-arg PHP=7-cli-alpine --build-arg PHPCS=$(PHPCS) -t $(IMAGE) -f $(DIR)/$(FILE) $(DIR)
+	docker buildx build --platform $(BUILDX_PLATFORMS) $(BUILD_ARGS_LATEST)
 else
-	docker build --build-arg PHP=$(PHP)-cli-alpine --build-arg PHPCS=$(PHPCS) -t $(IMAGE) -f $(DIR)/$(FILE) $(DIR)
+	docker buildx build --platform $(BUILDX_PLATFORMS) $(BUILD_ARGS_VERSION)
 endif
 
 rebuild: pull
 ifeq ($(PHP),latest)
-	docker build --no-cache --build-arg PHP=7-cli-alpine --build-arg PHPCS=$(PHPCS) -t $(IMAGE) -f $(DIR)/$(FILE) $(DIR)
+	docker buildx build --no-cache --platform $(BUILDX_PLATFORMS) $(BUILD_ARGS_LATEST)
 else
-	docker build --no-cache --build-arg PHP=$(PHP)-cli-alpine --build-arg PHPCS=$(PHPCS) -t $(IMAGE) -f $(DIR)/$(FILE) $(DIR)
+	docker buildx build --no-cache --platform $(BUILDX_PLATFORMS) $(BUILD_ARGS_VERSION)
 endif
 
 lint:
